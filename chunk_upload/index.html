@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamlit Chunk Upload</title>
+    <script type="module" src="/src/index.ts"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #2c3e50);
+            color: #fff;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .upload-section {
+            background: rgba(10, 15, 30, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 2rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .upload-box {
+            position: relative;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-box:hover {
+            border-color: #4285F4;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn {
+            border: none;
+            background: linear-gradient(to right, #4285F4, #34A853);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .file-info {
+            margin: 15px 0;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .progress-container {
+            background: rgba(0, 0, 0, 0.3);
+            height: 18px;
+            border-radius: 9px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #34A853, #0F9D58);
+            border-radius: 9px;
+            width: 0%;
+            transition: width 0.5s;
+            position: relative;
+        }
+
+        .progress-text {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: #AAAAFF;
+        }
+
+        .stat-card p {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .status-section {
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            min-height: 80px;
+            font-size: 0.9rem;
+        }
+
+        .status-message {
+            margin: 6px 0;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .success {
+            background: rgba(0, 128, 0, 0.3);
+            border-left: 3px solid #0F9D58;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.3);
+            border-left: 3px solid #EA4335;
+        }
+
+        .info {
+            background: rgba(30, 144, 255, 0.3);
+            border-left: 3px solid #4285F4;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            .upload-section {
+                padding: 15px;
+            }
+            .upload-box {
+                padding: 20px 15px;
+            }
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chunk Upload File</h1>
+        
+        <div class="upload-section">
+            <div class="upload-box" id="upload-box">
+                <p>Drag File Here, Or</p>
+                <button class="btn" id="select-button">Select File</button>
+                <input type="file" id="file-input" style="display:none">
+            </div>
+            
+            <div class="file-info">
+                <p>File: <span id="file-name">No Files Selected</span></p>
+                <p>Size: <span id="file-size">0 MB</span></p>
+                <p>Chunks: <span id="chunk-info">0/0</span></p>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress-text" id="progress-text">0%</div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Chunk Size</h3>
+                    <p id="chunk-size-display">5 MB</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Chunk Count</h3>
+                    <p id="chunk-count">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Chunks Uploaded</h3>
+                    <p id="chunks-uploaded">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Status</h3>
+                    <p id="upload-status">Wait For Upload</p>
+                </div>
+            </div>
+            
+            <div class="action-buttons" style="text-align:center">
+                <button class="btn" id="start-upload">Upload</button>
+                <button class="btn" id="merge-file">Merge</button>
+                <button class="btn" id="reset-btn">Reset</button>
+            </div>
+            
+            <div class="status-section" id="status-section">
+                <h3>Upload Status</h3>
+                <div class="status-message info" id="status-default">
+                    <p>Please select file and upload</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
