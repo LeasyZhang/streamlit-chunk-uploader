@@ -139,4 +139,13 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 __pycache__/
-build/
+
+# Python-related
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+
+# Poetry-related
+poetry.lock
